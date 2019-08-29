@@ -116,9 +116,9 @@ UCHAR CKW1281::BitBangNext(void)
 }
 void CKW1281::BitBangInit(UCHAR Address)
 {
-	//Convert Address in bit array, 
-	//[0]=Start bit, [1..7]=Address (LSB first), [8]=Parity, [9]=Stop.
-	//Bit counter ready for Start via BitBangNext()
+     //Convert Address in bit array, 
+     //[0]=Start bit, [1..7]=Address (LSB first), [8]=Parity, [9]=Stop.
+     //Bit counter ready for Start via BitBangNext()
      UCHAR Odd, Bit;
      UCHAR uc0;
 
@@ -172,7 +172,7 @@ void CKW1281::TimerThreadInClass(void)
                     ExPTC = CurrPTC;
                     switch(Job)
                          {
-                         case Job_PortOpenWait://Закрыт порт, ждать открытия
+                         case Job_PortOpenWait://Port closed, wait open
                               switch(PortStatus)
                                    {
                                    case PortStatus_Open:
@@ -185,7 +185,7 @@ void CKW1281::TimerThreadInClass(void)
                                         break;     
                                    }
                               break; 
-                         case Job_PortReady://Только что открылся
+                         case Job_PortReady://Opened just now
                               Period = Period200ms;
                               BitBangInit(8);
                               Job = Job_SendAddres;
@@ -193,14 +193,14 @@ void CKW1281::TimerThreadInClass(void)
                               break;     
                          case Job_SendAddres://1 start bit, 7 data bits, 1 parity, 1 stop bit
                               if (BitBangNext()==0)				      
-                                   {//Закончена передача битов адреса
+                                   {//Address sended
                                    Job = Job_WaitKeyWord;
                                    Period = Period10ms;
                                    }
                               break;
                          case Job_WaitKeyWord://KeyWord
                               if (ReceiveKeyWord()==0)
-                                   {//Получено ключевое слово
+                                   {//KeyWord received
                                    Job = Job_WaitTextBlock;
                                    } 
                               else
@@ -210,36 +210,36 @@ void CKW1281::TimerThreadInClass(void)
                               break;
                          case Job_WaitTextBlock://Text Block's
                               if (ReceiveTextBlock()==0)
-                                   {//Получены текстовые блоки
+                                   {//Text blocks received
                                    Job = Job_WaitParameterBlock;
                                    InitDone = 1;
                                    Period = Period100ms;
                                    } 
                               else
-                                   {//Нет текстовых блоков
+                                   {//No text blocks
                                    Job = Job_Error;
                                    }  
                               break;
                          case Job_WaitParameterBlock://Parameter Block's
                               if (ReceiveParameterGroup()==0)
-                                   {//Получены блоки параметров
+                                   {//Parameter blocks received
 							    
                                    } 
                               else
-                                   {//Нет блоков параметров
+                                   {//No parameter blocks
                                    Job = Job_Error;
                                    }  
                               break;
-                         case Job_Error://Ошибка приема одного из блоков
+                         case Job_Error://
                               //Ждать 1 сек
                               Period = Period100ms;
                               ErrorTimeout  = 0;
                               Job = Job_Timeout;
                               break;
-                         case Job_Timeout://Таймер
+                         case Job_Timeout://Timeout counter
                               ErrorTimeout++;
                               if (ErrorTimeout>10) 
-                                   {Job = Job_PortOpenWait;// еще одна попытка
+                                   {Job = Job_PortOpenWait;// one more try
                                    if (PortStatus == PortStatus_Open)
                                         {
                                         CloseHandle(hPort); 
@@ -362,21 +362,21 @@ UCHAR CKW1281::SendByteNoEcho(UCHAR Data)
                if (WriteFile(hPort,&Data,1,&bc,NULL)!=0)
                     {
                     if (WaitCommEvent(hPort,&dwMask,NULL)!=0)
-                         {
+                         {//Byte transmited
                          Result = 0;
                          }
                     else
-                         {
+                         {//waitcomevent error
                          Result = 3;
                          }     
                     }
                else
-                    {
+                    {//write file errror
                     Result = 1;
                     }    
                }
           else
-               {
+               {//secommmask error
                Result = 2;
                }    
 	     
@@ -388,7 +388,6 @@ UCHAR CKW1281::SendByteWithEchoTest(UCHAR Data)
      0x00 - Byte transmited, Echo OK
      0x01 - no echo byte received or echo error
      0x02 - Transmit error
-     0x03 - waitcomevent error
 */
      UCHAR Result;
 	 
@@ -595,7 +594,7 @@ UCHAR CKW1281::SendBlock(void)
           ptrData = &TxBlock.Length;
          
           mBreak = 1;
-          while(mBreak)//Помним правило MISRA не использовать break внутри while
+          while(mBreak)//remember MISRA rule to use break only in switch
                {
                if (SendByteWithEchoAndWaitACK(*ptrData++)!=0)
                     {//Byte transmit error
