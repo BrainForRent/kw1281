@@ -204,7 +204,7 @@ void CKW1281::TimerThreadInClass(void)
                                    Job = Job_WaitTextBlock;
                                    } 
                               else
-                                   {//Нет ключевого слова
+                                   {//No KeyWord received or wrong KeyWord
                                    Job = Job_Error;
                                    }  
                               break;
@@ -231,7 +231,7 @@ void CKW1281::TimerThreadInClass(void)
                                    }  
                               break;
                          case Job_Error://
-                              //Ждать 1 сек
+                              //Some error
                               Period = Period100ms;
                               ErrorTimeout  = 0;
                               Job = Job_Timeout;
@@ -439,7 +439,7 @@ UCHAR CKW1281::SendByteWithEchoAndWaitACK(UCHAR Data)
 
 UCHAR CKW1281::ReceiveKeyWord(void)
 {
-/*   0= KeyWord ОК
+/*   0= KeyWord OK
      1= no/wrong echo error
      2= KeyWord error
 */	
@@ -453,7 +453,7 @@ UCHAR CKW1281::ReceiveKeyWord(void)
                          {//KeyWord received
                          //Send 0x75 with echo test
                          if (SendByteWithEchoTest(0x75)==0)
-                              {//KeyWord ОК
+                              {//KeyWord OK
                               Result = 0;
                               BlockNumber = 0;
                               }
@@ -483,7 +483,7 @@ UCHAR CKW1281::ReceiveKeyWord(void)
 USHORT CKW1281::ReceiveByte(USHORT Timeout)
 {
 /*    
-     0х00dd - all OK
+     0Гµ00dd - all OK
      0x0100 - no data received error
      0x0200 - no/wrong echo error
 */
